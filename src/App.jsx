@@ -21,7 +21,7 @@ const App = () => {
     }
     `;
   const variables = {
-      search: "death note"
+      search: `${searchTerm}`
   };
   const url = "https://graphql.anilist.co";
   const options = {
@@ -36,7 +36,7 @@ const App = () => {
           })
 
   }
-  fetchData();
+  // fetchData();
   async function fetchData() {
     try {
       console.log("url: " + url);
@@ -66,7 +66,7 @@ const App = () => {
           onClick={
             () => {
               console.log("Test button clicked");
-              // fetchData();
+              fetchData();
             }
           }
           >Test</button>
