@@ -2,7 +2,12 @@ import React, { useState } from 'react'
 import Search from './components/Search'
 
 const App = () => {
+  const mostPopular = (searchList) => {
+    searchList.forEach()
+  }
+
   const [searchTerm, setSearchTerm] = useState("");
+  const [topSearchResult, setTopSearchResult] = useState([]);
 
   // fetching data using the anilist api
   const query = `
@@ -21,7 +26,7 @@ const App = () => {
     }
     `;
   const variables = {
-      search: `${searchTerm}`
+      search: searchTerm
   };
   const url = "https://graphql.anilist.co";
   const options = {
@@ -36,7 +41,6 @@ const App = () => {
           })
 
   }
-  // fetchData();
   async function fetchData() {
     try {
       console.log("url: " + url);
@@ -45,9 +49,12 @@ const App = () => {
       if(!response.ok) {
         throw new Error("Failed to fetch data");
       }
-      const data = await response.json();
-      console.log(data);
-      return data;
+      const responseJson = await response.json();
+      console.log("The result is: ");
+      console.log(responseJson.data.Page.media);
+      setTopSearchResult(responseJson.data.Page.media[0]);
+      console.log(topSearchResult);
+      return responseJson.data;
     }
     catch(e) {
       console.log(e);
@@ -70,8 +77,14 @@ const App = () => {
             }
           }
           >Test</button>
-          <h1>{searchTerm}</h1>
-          
+          {`${topSearchResult}` ?
+          <div>
+            <p className="text-white">{`Anime id: ${topSearchResult.id}`}</p>
+            <p className="text-white">{`Anime Name: ${topSearchResult.title.english}`}</p>
+            <p className="text-white">{`Anime Popularity: ${topSearchResult.popularity}`}</p>
+            <p className="text-white">{`Anime Score: ${topSearchResult.meanScore}`}</p>
+          </div> :
+          <div className='text-white'>NO</div>}
         </header>
       </div>
     </main>
