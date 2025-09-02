@@ -2,12 +2,22 @@ import React, { useState } from 'react'
 import Search from './components/Search'
 
 const App = () => {
-  const mostPopular = (searchList) => {
-    searchList.forEach()
-  }
+  // Wrap the result in html format
+  const httpWrapper = list => list.map(result => (
+    <div key={result.id}>
+      <p className="text-white">Anime Name: {result.title?.english}</p>
+      <p className="text-white">Anime Popularity: {result.popularity}</p>
+      <p className="text-white">Anime Score: {result.meanScore}</p>
+      <br />
+    </div>
+  ));
+
+  // Find the most popular search result
+  // IMPLEMENT here
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [topSearchResult, setTopSearchResult] = useState([]);
+  const [topSearchResult, setTopSearchResult] = useState(null);
+  const [searchList, setSearchList] = useState([]);
 
   // fetching data using the anilist api
   const query = `
@@ -39,22 +49,36 @@ const App = () => {
             query: query,
             variables: variables
           })
-
   }
+
   async function fetchData() {
     try {
       console.log("url: " + url);
-      console.log("options.body.variables: " + options.body.variables);
       const response = await fetch(url, options);
       if(!response.ok) {
         throw new Error("Failed to fetch data");
       }
       const responseJson = await response.json();
       console.log("The result is: ");
-      console.log(responseJson.data.Page.media);
+      if(!responseJson.data.Page.media.length) {
+        console.log("The response json list is EMPTY!");
+        setTopSearchResult(null);
+      }
+      const resultList = responseJson.data.Page.media;
+
+      console.log("result list (wrapped in htm for rendering): ");
+      console.log(httpWrapper(resultList));
+
+      setSearchList(httpWrapper(resultList));
+      console.log("searchList: ");
+      console.log(searchList);
+
       setTopSearchResult(responseJson.data.Page.media[0]);
+
+
+
       console.log(topSearchResult);
-      return responseJson.data;
+
     }
     catch(e) {
       console.log(e);
@@ -76,15 +100,15 @@ const App = () => {
               fetchData();
             }
           }
-          >Test</button>
-          {`${topSearchResult}` ?
+          >Search</button>
           <div>
-            <p className="text-white">{`Anime id: ${topSearchResult.id}`}</p>
-            <p className="text-white">{`Anime Name: ${topSearchResult.title.english}`}</p>
-            <p className="text-white">{`Anime Popularity: ${topSearchResult.popularity}`}</p>
-            <p className="text-white">{`Anime Score: ${topSearchResult.meanScore}`}</p>
-          </div> :
-          <div className='text-white'>NO</div>}
+            {topSearchResult ? (
+              searchList
+            ) : (
+              <div className="text-white">NO</div>
+            )}
+          </div>
+
         </header>
       </div>
     </main>
