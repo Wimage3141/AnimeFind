@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import Search from './components/Search'
 
 const App = () => {
+  const URL = "https://graphql.anilist.co";
   const QUERY_DEFAULT = `
     query($page:Int = 1) {
       Page(page: $page, perPage: 20) {
@@ -50,6 +51,9 @@ const App = () => {
 
   const buildOptions = (mode) => {
     let options;
+    const variables = {
+      search: searchTerm
+    };
     if(mode === "search") {
       console.log("mode is search, set options accordingly");
       options = {
@@ -63,29 +67,24 @@ const App = () => {
           variables: variables
         })
       };
-  }
-  else if(mode === "default") {
-      console.log("mode is default, set options accordingly");
-      options = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({
-          query: QUERY_DEFAULT,
-        })
-      };
     }
+    else if(mode === "default") {
+        console.log("mode is default, set options accordingly");
+        options = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            query: QUERY_DEFAULT,
+          })
+        };
+      }
 
     return options;
-  } 
+  }
 
-
-  const variables = {
-      search: searchTerm
-  };
-  const url = "https://graphql.anilist.co";
 
   // fetching data using the anilist api
   const fetchData = async (mode) => {
@@ -93,7 +92,7 @@ const App = () => {
     setErrorMessage("");
     try {
       const options = buildOptions(mode);
-      const response = await fetch(url, options);
+      const response = await fetch(URL, options);
       if(!response.ok) {
         throw new Error("Failed to fetch data");
       }
@@ -123,13 +122,14 @@ const App = () => {
             setMode={setMode}
             fetchData={fetchData}
           />
-
         </header>
 
         <section>
           <div className="movie-list">
             <h2 className="text-white mt-[40px] mb-[20px]">
-              {mode === "search" && animeList.length > 0
+              {(isLoading && errorMessage.length == 0)
+                ? `Loading...`
+                : mode === "search" && animeList.length > 0
                 ? `Search Results for "${searchedTerm}"`
                 : `Trending Anime`}
             </h2>
