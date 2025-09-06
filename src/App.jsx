@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Search from './components/Search'
 
 const App = () => {
   // Wrap the result in html format
   const httpWrapper = list => list.map(result => (
     <div key={result.id}>
-      <p className="text-white">Anime Name: {result.title?.english}</p>
+      <p className="text-white">Anime Name: {result.title?.english ?? result.title?.native}</p>
       <p className="text-white">Anime Popularity: {result.popularity}</p>
       <p className="text-white">Anime Score: {result.meanScore}</p>
       <br />
@@ -15,12 +15,25 @@ const App = () => {
   // Find the most popular search result
   // IMPLEMENT here
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [topSearchResult, setTopSearchResult] = useState(null);
-  const [searchList, setSearchList] = useState([]);
+  const QUERY_DEFAULT = `
+    query($page:Int = 1) {
+      Page(page: $page, perPage: 20) {
+        media(sort: [POPULARITY_DESC, SCORE_DESC]) {
+          id
+          title {
+            english
+            romaji
+            native
+          }
+          genres
+          popularity
+          meanScore
+        }
+      }
+    }
+  `;
 
-  // fetching data using the anilist api
-  const query = `
+  const QUERY_SEARCH = `
     query ($search: String!) { # Define which variables will be used in the query (id)
       Page {
         media (search: $search, type: ANIME) {
@@ -35,53 +48,78 @@ const App = () => {
       }
     }
     `;
+
+  const [searchedTerm, setSearchedTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchList, setSearchList] = useState([]);
+  const [animeList, setAnimeList] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [mode, setMode] = useState("default");
+
+  useEffect(() => {
+    fetchData("default");
+  }, []);
+
+  const buildOptions = (mode) => {
+    let options;
+    if(mode === "search") {
+      console.log("mode is search, set options accordingly");
+      options = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          query: QUERY_SEARCH,
+          variables: variables
+        })
+      };
+  }
+  else if(mode === "default") {
+      console.log("mode is default, set options accordingly");
+      options = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          query: QUERY_DEFAULT,
+        })
+      };
+    }
+
+    return options;
+  } 
+
+
   const variables = {
       search: searchTerm
   };
   const url = "https://graphql.anilist.co";
-  const options = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json"
-    },
-    body: JSON.stringify({
-            query: query,
-            variables: variables
-          })
-  }
 
-  async function fetchData() {
+  // fetching data using the anilist api
+  const fetchData = async (mode) => {
+    setIsLoading(true);
+    setErrorMessage("");
     try {
-      console.log("url: " + url);
+      const options = buildOptions(mode);
       const response = await fetch(url, options);
       if(!response.ok) {
         throw new Error("Failed to fetch data");
       }
       const responseJson = await response.json();
-      console.log("The result is: ");
-      if(!responseJson.data.Page.media.length) {
-        console.log("The response json list is EMPTY!");
-        setTopSearchResult(null);
-      }
       const resultList = responseJson.data.Page.media;
-
-      console.log("result list (wrapped in htm for rendering): ");
-      console.log(httpWrapper(resultList));
-
+      setAnimeList(resultList);
+      console.log(animeList);
       setSearchList(httpWrapper(resultList));
-      console.log("searchList: ");
-      console.log(searchList);
-
-      setTopSearchResult(responseJson.data.Page.media[0]);
-
-
-
-      console.log(topSearchResult);
-
     }
     catch(e) {
       console.log(e);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -91,25 +129,34 @@ const App = () => {
       <div className="wrapper" >
         <header>
           <h1>Anime<span className="text-gradient">Find</span></h1>
-          <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-          <button
-          className="px-3 py-2 border rounded bg-gray-100 text-gray-800 hover:bg-gray-200 cursor-pointer"
-          onClick={
-            () => {
-              console.log("Test button clicked");
-              fetchData();
-            }
-          }
-          >Search</button>
-          <div>
-            {topSearchResult ? (
-              searchList
-            ) : (
-              <div className="text-white">NO</div>
-            )}
-          </div>
+          <Search
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            searchedTerm={searchedTerm}
+            setSearchedTerm={setSearchedTerm}
+            mode={mode}
+            setMode={setMode}
+            fetchData={fetchData}
+          />
 
         </header>
+
+        <section>
+          <div className="movie-list">
+            <h2 className="text-white mt-[40px] mb-[20px]">
+              {mode === "search" && searchList.length > 0
+                ? `Search Results for "${searchedTerm}"`
+                : `Trending Anime`}
+            </h2>
+          </div>
+
+          <div>
+            <ul>
+              
+            </ul>
+            {searchList}
+          </div>
+        </section>
       </div>
     </main>
   )

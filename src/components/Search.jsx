@@ -1,6 +1,6 @@
 import React from 'react'
 
-function Search({ searchTerm, setSearchTerm }) {
+function Search({ searchTerm, setSearchTerm, searchedTerm, setSearchedTerm, mode, setMode, fetchData }) {
   return (
     <div className="search">
         <div>
@@ -11,6 +11,20 @@ function Search({ searchTerm, setSearchTerm }) {
                 value={searchTerm}
                 onChange={(e) => {setSearchTerm(e.target.value)} }
             />
+            <button
+            className="px-3 py-2 border rounded bg-gray-100 text-gray-800 hover:bg-gray-200 cursor-pointer"
+            onClick={
+            () => {
+                let currMode = "search";
+                if(searchTerm.length == 0) {
+                  currMode = "default";
+                }
+                setMode(currMode);
+                fetchData(currMode);
+                setSearchedTerm(searchTerm);
+              }
+            }
+            >Search</button>
         </div>
     </div>
   )
