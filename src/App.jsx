@@ -113,7 +113,6 @@ const App = () => {
       const responseJson = await response.json();
       const resultList = responseJson.data.Page.media;
       setAnimeList(resultList);
-      console.log(animeList);
       setSearchList(httpWrapper(resultList));
     }
     catch(e) {
@@ -152,9 +151,15 @@ const App = () => {
 
           <div>
             <ul>
-              
+              {animeList.map((anime) => (
+                <div key={anime.id}>
+                  <p className="text-white">Anime Name: {anime.title?.english ?? anime.title?.native}</p>
+                  <p className="text-white">Anime Popularity: {anime.popularity}</p>
+                  <p className="text-white">Anime Score: {anime.meanScore}</p>
+                  <br />
+                </div>
+              ))}
             </ul>
-            {searchList}
           </div>
         </section>
       </div>
