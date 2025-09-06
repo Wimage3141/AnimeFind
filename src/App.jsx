@@ -2,19 +2,6 @@ import React, { useState, useEffect } from 'react'
 import Search from './components/Search'
 
 const App = () => {
-  // Wrap the result in html format
-  const httpWrapper = list => list.map(result => (
-    <div key={result.id}>
-      <p className="text-white">Anime Name: {result.title?.english ?? result.title?.native}</p>
-      <p className="text-white">Anime Popularity: {result.popularity}</p>
-      <p className="text-white">Anime Score: {result.meanScore}</p>
-      <br />
-    </div>
-  ));
-
-  // Find the most popular search result
-  // IMPLEMENT here
-
   const QUERY_DEFAULT = `
     query($page:Int = 1) {
       Page(page: $page, perPage: 20) {
@@ -44,6 +31,7 @@ const App = () => {
             english
             native
           }
+          genres
         }
       }
     }
@@ -51,7 +39,6 @@ const App = () => {
 
   const [searchedTerm, setSearchedTerm] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchList, setSearchList] = useState([]);
   const [animeList, setAnimeList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -113,7 +100,6 @@ const App = () => {
       const responseJson = await response.json();
       const resultList = responseJson.data.Page.media;
       setAnimeList(resultList);
-      setSearchList(httpWrapper(resultList));
     }
     catch(e) {
       console.log(e);
@@ -143,7 +129,7 @@ const App = () => {
         <section>
           <div className="movie-list">
             <h2 className="text-white mt-[40px] mb-[20px]">
-              {mode === "search" && searchList.length > 0
+              {mode === "search" && animeList.length > 0
                 ? `Search Results for "${searchedTerm}"`
                 : `Trending Anime`}
             </h2>
@@ -154,6 +140,14 @@ const App = () => {
               {animeList.map((anime) => (
                 <div key={anime.id}>
                   <p className="text-white">Anime Name: {anime.title?.english ?? anime.title?.native}</p>
+                  <p className="text-white">
+                    Genre: {
+                      anime.genres.map((genre, index) => {
+                        if(index == anime.genres.length - 1) return `${genre}`
+                        return `${genre}, `
+                      })
+                    }
+                  </p>
                   <p className="text-white">Anime Popularity: {anime.popularity}</p>
                   <p className="text-white">Anime Score: {anime.meanScore}</p>
                   <br />
