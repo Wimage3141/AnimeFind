@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Search from './components/Search'
 import Spinner from './components/Spinner';
+import AnimeCard from './components/AnimeCard';
 
 const App = () => {
   const URL = "https://graphql.anilist.co";
@@ -9,6 +10,13 @@ const App = () => {
       Page(page: $page, perPage: 20) {
         media(sort: [POPULARITY_DESC, SCORE_DESC]) {
           id
+          bannerImage
+          coverImage {
+            color
+            medium
+            large
+            extraLarge
+          }
           title {
             english
             romaji
@@ -27,6 +35,13 @@ const App = () => {
       Page {
         media (search: $search, type: ANIME) {
           id
+          bannerImage
+          coverImage {
+            color
+            medium
+            large
+            extraLarge
+          }
           popularity
           meanScore
           title {
@@ -112,7 +127,7 @@ const App = () => {
   return (
     <main>
       <div className="pattern" />
-      <div className="wrapper" >
+      <div className="wrapper">
         <header>
           <h1>Anime<span className="text-gradient">Find</span></h1>
           <Search
@@ -126,7 +141,7 @@ const App = () => {
           />
         </header>
 
-        <section>
+        <section className="all-animes">
           <div className="anime-list">
             <h2 className="text-white mt-[40px] mb-[20px]">
               {(isLoading && !errorMessage)
@@ -135,7 +150,7 @@ const App = () => {
                 ? <p className="text-red-500">{errorMessage}</p>
                 : mode === "search" && animeList.length > 0
                 ? `Search Results for "${searchedTerm}"`
-                : `Trending Anime`}
+                : `What's Trending`}
             </h2>
           </div>
 
@@ -144,20 +159,7 @@ const App = () => {
                 ? `${errorMessage}` :
                 <ul>
                   {animeList.map((anime) => (
-                    <div key={anime.id}>
-                      <p className="text-white">Anime Name: {anime.title?.english ?? anime.title?.native}</p>
-                      <p className="text-white">
-                        Genre: {
-                          anime.genres.map((genre, index) => {
-                            if(index == anime.genres.length - 1) return `${genre}`
-                            return `${genre}, `
-                          })
-                        }
-                      </p>
-                      <p className="text-white">Anime Popularity: {anime.popularity}</p>
-                      <p className="text-white">Anime Score: {anime.meanScore}</p>
-                      <br />
-                    </div>
+                    <AnimeCard anime={anime} key={anime.id}/>
                   ))}
                 </ul>}
           </div>
