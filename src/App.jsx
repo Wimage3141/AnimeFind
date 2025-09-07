@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Search from './components/Search'
+import Spinner from './components/Spinner';
 
 const App = () => {
   const URL = "https://graphql.anilist.co";
@@ -102,6 +103,7 @@ const App = () => {
     }
     catch(e) {
       console.log(e);
+      setErrorMessage(e);
     } finally {
       setIsLoading(false);
     }
@@ -125,10 +127,12 @@ const App = () => {
         </header>
 
         <section>
-          <div className="movie-list">
+          <div className="anime-list">
             <h2 className="text-white mt-[40px] mb-[20px]">
-              {(isLoading && errorMessage.length == 0)
-                ? `Loading...`
+              {(isLoading && !errorMessage)
+                ? <Spinner />
+                : errorMessage
+                ? <p className="text-red-500">{errorMessage}</p>
                 : mode === "search" && animeList.length > 0
                 ? `Search Results for "${searchedTerm}"`
                 : `Trending Anime`}
@@ -136,24 +140,26 @@ const App = () => {
           </div>
 
           <div>
-            <ul>
-              {animeList.map((anime) => (
-                <div key={anime.id}>
-                  <p className="text-white">Anime Name: {anime.title?.english ?? anime.title?.native}</p>
-                  <p className="text-white">
-                    Genre: {
-                      anime.genres.map((genre, index) => {
-                        if(index == anime.genres.length - 1) return `${genre}`
-                        return `${genre}, `
-                      })
-                    }
-                  </p>
-                  <p className="text-white">Anime Popularity: {anime.popularity}</p>
-                  <p className="text-white">Anime Score: {anime.meanScore}</p>
-                  <br />
-                </div>
-              ))}
-            </ul>
+            {isLoading ? null : errorMessage
+                ? `${errorMessage}` :
+                <ul>
+                  {animeList.map((anime) => (
+                    <div key={anime.id}>
+                      <p className="text-white">Anime Name: {anime.title?.english ?? anime.title?.native}</p>
+                      <p className="text-white">
+                        Genre: {
+                          anime.genres.map((genre, index) => {
+                            if(index == anime.genres.length - 1) return `${genre}`
+                            return `${genre}, `
+                          })
+                        }
+                      </p>
+                      <p className="text-white">Anime Popularity: {anime.popularity}</p>
+                      <p className="text-white">Anime Score: {anime.meanScore}</p>
+                      <br />
+                    </div>
+                  ))}
+                </ul>}
           </div>
         </section>
       </div>
